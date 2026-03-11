@@ -17,7 +17,7 @@ import com.yupi.project.model.dto.user.UserRegisterRequest;
 import com.yupi.project.model.dto.user.UserUpdateRequest;
 import com.yupi.project.model.vo.UserVO;
 import com.yupi.project.service.UserService;
-import com.yupi.yuapicommon.model.entity.User;
+import com.yupi.apicommon.model.entity.User;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
@@ -57,7 +57,7 @@ public class UserController {
         String userPassword = userRegisterRequest.getUserPassword();
         String checkPassword = userRegisterRequest.getCheckPassword();
         if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)) {
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         long result = userService.userRegister(userAccount, userPassword, checkPassword);
         return ResultUtils.success(result);

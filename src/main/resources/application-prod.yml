@@ -4,6 +4,6 @@
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/api
-    username: root
-    password: Wei.1234
+    url: ${API_DB_URL:jdbc:mysql://localhost:3306/api}
+    username: ${API_DB_USERNAME:root}
+    password: ${API_DB_PASSWORD:Wei.1234}

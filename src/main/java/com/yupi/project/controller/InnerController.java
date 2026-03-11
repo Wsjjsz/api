@@ -4,11 +4,11 @@ import com.yupi.project.common.BaseResponse;
 import com.yupi.project.common.ErrorCode;
 import com.yupi.project.common.ResultUtils;
 import com.yupi.project.exception.BusinessException;
-import com.yupi.yuapicommon.model.entity.InterfaceInfo;
-import com.yupi.yuapicommon.model.entity.User;
-import com.yupi.yuapicommon.service.InnerInterfaceInfoService;
-import com.yupi.yuapicommon.service.InnerUserInterfaceInfoService;
-import com.yupi.yuapicommon.service.InnerUserService;
+import com.yupi.apicommon.model.entity.InterfaceInfo;
+import com.yupi.apicommon.model.entity.User;
+import com.yupi.apicommon.service.InnerInterfaceInfoService;
+import com.yupi.apicommon.service.InnerUserInterfaceInfoService;
+import com.yupi.apicommon.service.InnerUserService;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,7 +30,7 @@ public class InnerController {
 
     private static final String INNER_TOKEN_HEADER = "X-Inner-Token";
 
-    @Value("${yuapi.inner-token:yuapi-inner-token}")
+    @Value("${api.inner-token:api-inner-token}")
     private String innerToken;
 
     @Resource

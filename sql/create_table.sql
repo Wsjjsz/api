@@ -30,6 +30,30 @@ create table if not exists `api`.`user`
     unique (userAccount)
     ) comment '用户';
 
+-- 帖子信息
+create table if not exists `api`.`post`
+(
+    `id`           bigint                                 not null auto_increment comment '主键' primary key,
+    `age`          int                                    null comment '年龄',
+    `gender`       tinyint                                null comment '性别（0-男, 1-女）',
+    `education`    varchar(256)                           null comment '学历',
+    `place`        varchar(256)                           null comment '地点',
+    `job`          varchar(256)                           null comment '职业',
+    `contact`      varchar(256)                           null comment '联系方式',
+    `loveExp`      varchar(256)                           null comment '感情经历',
+    `content`      text                                   null comment '内容（个人介绍）',
+    `photo`        varchar(1024)                          null comment '照片地址',
+    `reviewStatus` int          default 0                 not null comment '状态（0-待审核, 1-通过, 2-拒绝）',
+    `reviewMessage` varchar(512)                          null comment '审核信息',
+    `viewNum`      int          default 0                 not null comment '浏览数',
+    `thumbNum`     int          default 0                 not null comment '点赞数',
+    `userId`       bigint                                 not null comment '创建用户 id',
+    `createTime`   datetime     default CURRENT_TIMESTAMP not null comment '创建时间',
+    `updateTime`   datetime     default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
+    `isDelete`     tinyint      default 0                 not null comment '是否删除(0-未删, 1-已删)',
+    key idx_userId (`userId`)
+) comment '帖子信息';
+
 -- 接口信息
 create table if not exists `api`.`interface_info`
 (
@@ -76,7 +100,7 @@ VALUES
 
 
 -- ==========================================
--- 3. 插入【接口信息表】真实数据（与 yuapi-interface 当前实现一致）
+-- 3. 插入【接口信息表】真实数据（与 api-interface 当前实现一致）
 -- ==========================================
 DELETE FROM `api`.`interface_info`;
 

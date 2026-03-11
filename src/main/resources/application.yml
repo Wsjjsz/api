@@ -3,16 +3,16 @@
 # @from <a href="https://yupi.icu">编程导航知识星球</a>
 spring:
   application:
-    name: yuapi-backend
+    name: api-backend
   devtools:
     restart:
       enabled: false
   # DataSource Config
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/api
-    username: root
-    password: Wei.1234
+    url: ${API_DB_URL:jdbc:mysql://localhost:3306/api}
+    username: ${API_DB_USERNAME:root}
+    password: ${API_DB_PASSWORD:Wei.1234}
   mvc:
     pathmatch:
       matching-strategy: ANT_PATH_MATCHER
@@ -22,10 +22,10 @@ spring:
     store-type: none
 #   如需启用 Redis Session，可按需恢复下面配置
   redis:
-     port: 6379
-     host: localhost
-     database: 0
-     password: Wei@123redis
+     port: ${API_REDIS_PORT:6379}
+     host: ${API_REDIS_HOST:localhost}
+     database: ${API_REDIS_DATABASE:0}
+     password: ${API_REDIS_PASSWORD:Wei@123redis}
 server:
   port: 7529
   servlet:
@@ -40,14 +40,14 @@ mybatis-plus:
       logic-delete-value: 1 # 逻辑已删除值(默认为 1)
       logic-not-delete-value: 0 # 逻辑未删除值(默认为 0)
 # 这段配置仅供测试，实际应该根据登录用户获取对应的 ak、sk
-yuapi:
-  inner-token: yuapi-inner-token
+api:
+  inner-token: ${API_INNER_TOKEN:api-inner-token}
   client:
-    access-key: yupi
-    secret-key: abcdefgh
+    access-key: ${API_CLIENT_ACCESS_KEY:yupi}
+    secret-key: ${API_CLIENT_SECRET_KEY:abcdefgh}
 dubbo:
   application:
-    name: yuapi-backend-provider
+    name: api-backend-provider
     qos-enable: false
     register-mode: interface
     service-discovery:

@@ -43,3 +43,7 @@ build/
 # Frontend artifacts
 **/node_modules/
 **/dist/
+
+# local runtime files
+.run/
+.gh-config/

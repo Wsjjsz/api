@@ -1,6 +1,7 @@
 package com.yupi.project.service;
 
-import com.yupi.yuapicommon.model.entity.User;
+import com.yupi.project.exception.BusinessException;
+import com.yupi.apicommon.model.entity.User;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -50,35 +51,13 @@ class UserServiceTest {
 
     @Test
     void userRegister() {
-        String userAccount = "yupi";
-        String userPassword = "";
-        String checkPassword = "123456";
-        try {
-            long result = userService.userRegister(userAccount, userPassword, checkPassword);
-            Assertions.assertEquals(-1, result);
-            userAccount = "yu";
-            result = userService.userRegister(userAccount, userPassword, checkPassword);
-            Assertions.assertEquals(-1, result);
-            userAccount = "yupi";
-            userPassword = "123456";
-            result = userService.userRegister(userAccount, userPassword, checkPassword);
-            Assertions.assertEquals(-1, result);
-            userAccount = "yu pi";
-            userPassword = "12345678";
-            result = userService.userRegister(userAccount, userPassword, checkPassword);
-            Assertions.assertEquals(-1, result);
-            checkPassword = "123456789";
-            result = userService.userRegister(userAccount, userPassword, checkPassword);
-            Assertions.assertEquals(-1, result);
-            userAccount = "dogYupi";
-            checkPassword = "12345678";
-            result = userService.userRegister(userAccount, userPassword, checkPassword);
-            Assertions.assertEquals(-1, result);
-            userAccount = "yupi";
-            result = userService.userRegister(userAccount, userPassword, checkPassword);
-            Assertions.assertEquals(-1, result);
-        } catch (Exception e) {
-
-        }
+        Assertions.assertThrows(BusinessException.class,
+                () -> userService.userRegister("yupi", "", "123456"));
+        Assertions.assertThrows(BusinessException.class,
+                () -> userService.userRegister("yu", "12345678", "12345678"));
+        Assertions.assertThrows(BusinessException.class,
+                () -> userService.userRegister("yupi", "12345678", "87654321"));
+        Assertions.assertThrows(BusinessException.class,
+                () -> userService.userRegister("", "12345678", "12345678"));
     }
 }
