@@ -273,7 +273,7 @@ const Login: React.FC = () => {
               <ApiOutlined />
               <span>SUAPI Platform</span>
             </div>
-            <h1 className={styles.brandTitle}>更快连接 API</h1>
+            <h1 className={styles.brandTitle}>极速接入 API</h1>
             <p className={styles.brandSubtitle}>统一管理与调用，让接入更直接。</p>
             <div className={styles.featureList}>
               <div className={styles.featureItem}>

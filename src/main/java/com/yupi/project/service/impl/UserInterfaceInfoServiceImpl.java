@@ -1,10 +1,13 @@
 package com.yupi.project.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.yupi.project.common.ErrorCode;
 import com.yupi.project.exception.BusinessException;
 import com.yupi.project.mapper.UserInterfaceInfoMapper;
+import com.yupi.project.model.dto.userinterfaceinfo.UserInterfaceInfoQueryRequest;
+import com.yupi.project.model.vo.UserInterfaceInfoManageVO;
 import com.yupi.project.service.UserInterfaceInfoService;
 import com.yupi.apicommon.model.entity.UserInterfaceInfo;
 import org.springframework.stereotype.Service;
@@ -55,6 +58,19 @@ public class UserInterfaceInfoServiceImpl extends ServiceImpl<UserInterfaceInfoM
         return this.update(updateWrapper);
     }
 
+    @Override
+    public Page<UserInterfaceInfoManageVO> pageUserInterfaceInfoManage(UserInterfaceInfoQueryRequest queryRequest) {
+        if (queryRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        long current = queryRequest.getCurrent();
+        long pageSize = queryRequest.getPageSize();
+        if (pageSize > 50) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        Page<UserInterfaceInfoManageVO> page = new Page<>(current, pageSize);
+        this.baseMapper.pageUserInterfaceInfoManage(page, queryRequest);
+        return page;
+    }
+
 }
-
-

@@ -1,6 +1,9 @@
 package com.yupi.project.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.yupi.project.model.dto.userinterfaceinfo.UserInterfaceInfoQueryRequest;
+import com.yupi.project.model.vo.UserInterfaceInfoManageVO;
 import com.yupi.apicommon.model.entity.UserInterfaceInfo;
 
 /**
@@ -22,4 +25,12 @@ public interface UserInterfaceInfoService extends IService<UserInterfaceInfo> {
      * @return
      */
     boolean invokeCount(long interfaceInfoId, long userId);
+
+    /**
+     * 管理端分页查询（含用户名、接口名）
+     *
+     * @param queryRequest 查询条件
+     * @return 分页结果
+     */
+    Page<UserInterfaceInfoManageVO> pageUserInterfaceInfoManage(UserInterfaceInfoQueryRequest queryRequest);
 }

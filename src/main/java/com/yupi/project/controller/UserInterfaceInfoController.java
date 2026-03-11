@@ -10,6 +10,7 @@ import com.yupi.project.exception.BusinessException;
 import com.yupi.project.model.dto.userinterfaceinfo.UserInterfaceInfoAddRequest;
 import com.yupi.project.model.dto.userinterfaceinfo.UserInterfaceInfoQueryRequest;
 import com.yupi.project.model.dto.userinterfaceinfo.UserInterfaceInfoUpdateRequest;
+import com.yupi.project.model.vo.UserInterfaceInfoManageVO;
 import com.yupi.project.service.UserInterfaceInfoService;
 import com.yupi.project.service.UserService;
 import com.yupi.apicommon.model.entity.User;
@@ -202,6 +203,25 @@ public class UserInterfaceInfoController {
                 sortOrder.equals(CommonConstant.SORT_ORDER_ASC), sortField);
         Page<UserInterfaceInfo> userInterfaceInfoPage = userInterfaceInfoService.page(new Page<>(current, size), queryWrapper);
         return ResultUtils.success(userInterfaceInfoPage);
+    }
+
+    /**
+     * 管理端分页查询（含用户名、接口名）
+     *
+     * @param userInterfaceInfoQueryRequest 查询请求
+     * @return 分页结果
+     */
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    @GetMapping("/list/page/manage")
+    public BaseResponse<Page<UserInterfaceInfoManageVO>> listUserInterfaceInfoManageByPage(
+            UserInterfaceInfoQueryRequest userInterfaceInfoQueryRequest
+    ) {
+        if (userInterfaceInfoQueryRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        Page<UserInterfaceInfoManageVO> page =
+                userInterfaceInfoService.pageUserInterfaceInfoManage(userInterfaceInfoQueryRequest);
+        return ResultUtils.success(page);
     }
 
     // endregion

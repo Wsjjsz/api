@@ -30,6 +30,12 @@ export default [
         path: '/admin/interface_analysis',
         component: './Admin/InterfaceAnalysis',
       },
+      {
+        name: '用户管理',
+        icon: 'team',
+        path: '/admin/user_manage',
+        component: './Admin/UserManagement',
+      },
     ],
   },
 

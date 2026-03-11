@@ -33,4 +33,40 @@
     <select id="getTotalInvokeNum" resultType="java.lang.Long">
         select ifnull(sum(totalNum), 0) from user_interface_info where isDelete = 0;
     </select>
+
+    <select id="pageUserInterfaceInfoManage"
+            resultType="com.yupi.project.model.vo.UserInterfaceInfoManageVO">
+        select ui.id,
+               ui.userId,
+               u.userName       as userName,
+               ui.interfaceInfoId,
+               i.name           as interfaceName,
+               ui.totalNum,
+               ui.leftNum,
+               ui.status,
+               ui.createTime,
+               ui.updateTime
+        from user_interface_info ui
+                 left join `user` u on ui.userId = u.id and u.isDelete = 0
+                 left join interface_info i on ui.interfaceInfoId = i.id and i.isDelete = 0
+        where ui.isDelete = 0
+        <if test="query != null">
+            <if test="query.userName != null and query.userName != ''">
+                and u.userName like concat('%', #{query.userName}, '%')
+            </if>
+            <if test="query.interfaceName != null and query.interfaceName != ''">
+                and i.name like concat('%', #{query.interfaceName}, '%')
+            </if>
+            <if test="query.userId != null and query.userId > 0">
+                and ui.userId = #{query.userId}
+            </if>
+            <if test="query.interfaceInfoId != null and query.interfaceInfoId > 0">
+                and ui.interfaceInfoId = #{query.interfaceInfoId}
+            </if>
+            <if test="query.status != null">
+                and ui.status = #{query.status}
+            </if>
+        </if>
+        order by ui.updateTime desc
+    </select>
 </mapper>

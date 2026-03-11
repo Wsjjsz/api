@@ -77,6 +77,29 @@ export async function listUserInterfaceInfoByPageUsingGET(
   });
 }
 
+/** listUserInterfaceInfoManageByPage GET /api/userInterfaceInfo/list/page/manage */
+export async function listUserInterfaceInfoManageByPageUsingGET(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: {
+    current?: number;
+    pageSize?: number;
+    userName?: string;
+    interfaceName?: string;
+    status?: number;
+    userId?: number;
+    interfaceInfoId?: number;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<any>('/api/userInterfaceInfo/list/page/manage', {
+    method: 'GET',
+    params: {
+      ...params,
+    },
+    ...(options || {}),
+  });
+}
+
 /** updateUserInterfaceInfo POST /api/userInterfaceInfo/update */
 export async function updateUserInterfaceInfoUsingPOST(
   body: API.UserInterfaceInfoUpdateRequest,
