@@ -1,0 +1,71 @@
+# 公共配置文件
+# @author <a href="https://github.com/liyupi">程序员鱼皮</a>
+# @from <a href="https://yupi.icu">编程导航知识星球</a>
+server:
+  port: 8090
+spring:
+  application:
+    name: yuapi-gateway
+  devtools:
+    restart:
+      enabled: false
+  cloud:
+    gateway:
+      default-filters:
+        - AddResponseHeader=source, yupi
+      routes:
+        # 管理端 API 走主后端（登录、接口管理、统计等）
+        - id: backend_route
+          uri: http://localhost:7529
+          predicates:
+            - Path=/api/user/**,/api/interfaceInfo/**,/api/post/**,/api/userInterfaceInfo/**,/api/analysis/**,/api/v3/**,/api/doc.html,/api/webjars/**
+        # 真正被调用的接口走接口服务
+        - id: interface_route
+          uri: http://localhost:8123
+          predicates:
+            - Path=/api/name/**,/api/zodiac/**,/api/poetry/**,/api/calendar/**,/api/idiom/**,/api/random/**,/api/history/**,/api/joke/**,/api/recipe/**
+#        - id: add_request_header_route
+#          uri: http://localhost:8123
+#          predicates:
+#            - Path=/api/**
+#          filters:
+#            - AddRequestHeader=yupi, swag
+#            - AddRequestParameter=name, dog
+#            - name: CircuitBreaker
+#              args:
+#                name: myCircuitBreaker
+#                fallbackUri: forward:/fallback
+#        - id: yupi-fallback
+#          uri: https://yupi.icu
+#          predicates:
+#            - Path=/fallback
+logging:
+  level:
+    org:
+      springframework:
+        cloud:
+          gateway: info
+
+# 原创_项目 [鱼皮](https://space.bilibili.com/12890453/)
+
+yuapi:
+  inner-host: http://localhost:7529
+  inner-token: yuapi-inner-token
+  prefer-http-inner: true
+
+dubbo:
+  application:
+    name: yuapi-gateway
+    qos-enable: false
+    register-mode: interface
+    service-discovery:
+      migration: FORCE_INTERFACE
+  consumer:
+    check: false
+    timeout: 5000
+  protocol:
+    name: dubbo
+    port: -1
+  registry:
+    id: nacos-registry
+    address: nacos://localhost:8848
