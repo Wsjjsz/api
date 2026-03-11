@@ -8,8 +8,8 @@ const Settings: LayoutSettings & {
   logo?: string;
 } = {
   navTheme: 'light',
-  // 拂晓蓝
-  colorPrimary: '#1890ff',
+  // 主题蓝
+  colorPrimary: '#4468ff',
   layout: 'top',
   contentWidth: 'Fluid',
   fixedHeader: false,
@@ -17,7 +17,7 @@ const Settings: LayoutSettings & {
   colorWeak: false,
   title: 'API接口',
   pwa: false,
-  logo: 'https://gw.alipayobjects.com/zos/rmsportal/KDpgvguMpGfqaHPjicRK.svg',
+  logo: '/suapi_nav_logo_v2.svg',
   iconfontUrl: '',
 };
 

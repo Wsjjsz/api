@@ -10,3 +10,10 @@ export async function listTopInvokeInterfaceInfoUsingGET(options?: { [key: strin
   });
 }
 
+/** getInterfaceInvokeOverview GET /api/analysis/interface/invoke/overview */
+export async function getInterfaceInvokeOverviewUsingGET(options?: { [key: string]: any }) {
+  return request<API.BaseResponseobject>('/api/analysis/interface/invoke/overview', {
+    method: 'GET',
+    ...(options || {}),
+  });
+}

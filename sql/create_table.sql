@@ -95,7 +95,7 @@ INSERT INTO `api`.`user`
 (`id`, `userName`, `userAccount`, `userAvatar`, `gender`, `userRole`, `userPassword`, `accessKey`, `secretKey`, `isDelete`)
 VALUES
     (1, '管理员', 'admin123', 'https://gw.alipayobjects.com/zos/rmsportal/BiazfanxmamNRoxxVxka.png', 1, 'admin', '563a6264ccf929ab703cc8600a82382c', '5e74a4f4f365f1d6a54529206dc9f6cc', '6b1dec9ca0ace75add5ea3d9d8c6a007', 0),
-    (2, '用户A', 'jiazi', 'https://api.dicebear.com/7.x/avataaars/svg?seed=A', 1, 'user', '563a6264ccf929ab703cc8600a82382c', '9bb27dc5b86e12cb4fa4f16785db6a33', 'cf148f93a70cda7fcf4501ea40b39f18', 0);
+    (2, '用户A', 'jiazi1', 'https://api.dicebear.com/7.x/avataaars/svg?seed=A', 1, 'user', '563a6264ccf929ab703cc8600a82382c', '9bb27dc5b86e12cb4fa4f16785db6a33', 'cf148f93a70cda7fcf4501ea40b39f18', 0);
 
 
 

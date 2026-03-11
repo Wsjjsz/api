@@ -39,6 +39,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      * 盐值，混淆密码
      */
     private static final String SALT = "yupi";
+    /**
+     * 账号规则：6-16 位，可包含字母、数字、特殊字符
+     */
+    private static final String USER_ACCOUNT_REGEX = "^[A-Za-z0-9!@#$%^&*()_+\\-=\\[\\]{};:,.?/|]{6,16}$";
+    /**
+     * 密码规则：8-16 位，必须包含字母和数字（仅字母 + 数字）
+     */
+    private static final String USER_PASSWORD_REGEX = "^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,16}$";
 
     @Override
     public long userRegister(String userAccount, String userPassword, String checkPassword) {
@@ -46,12 +54,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数为空");
         }
-        if (userAccount.length() < 4) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户账号过短");
-        }
-        if (userPassword.length() < 8 || checkPassword.length() < 8) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户密码过短");
-        }
+        validUserAccount(userAccount);
+        validUserPassword(userPassword);
+        validUserPassword(checkPassword);
         // 密码和校验密码相同
         if (!userPassword.equals(checkPassword)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "两次输入的密码不一致");
@@ -89,12 +94,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         if (StringUtils.isAnyBlank(userAccount, userPassword)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数为空");
         }
-        if (userAccount.length() < 4) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号错误");
-        }
-        if (userPassword.length() < 8) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "密码错误");
-        }
+        validUserAccount(userAccount);
+        validUserPassword(userPassword);
         // 2. 加密
         String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
         // 查询用户是否存在
@@ -117,6 +118,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         if (StringUtils.isBlank(userAccount)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号不能为空");
         }
+        validUserAccount(userAccount);
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("userAccount", userAccount);
         long count = userMapper.selectCount(queryWrapper);
@@ -133,9 +135,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         if (StringUtils.isAnyBlank(userAccount, newPassword, checkPassword)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数为空");
         }
-        if (newPassword.length() < 8 || checkPassword.length() < 8) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "密码过短");
-        }
+        validUserAccount(userAccount);
+        validUserPassword(newPassword);
+        validUserPassword(checkPassword);
         if (!newPassword.equals(checkPassword)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "两次输入的密码不一致");
         }
@@ -208,8 +210,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         return true;
     }
 
+    private void validUserAccount(String userAccount) {
+        if (!userAccount.matches(USER_ACCOUNT_REGEX)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号需 6-16 位，可包含字母、数字、特殊字符");
+        }
+    }
+
+    private void validUserPassword(String userPassword) {
+        if (!userPassword.matches(USER_PASSWORD_REGEX)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "密码需 8-16 位，且包含字母和数字");
+        }
+    }
+
 }
-
-
 
 

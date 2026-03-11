@@ -1,11 +1,11 @@
 import Footer from '@/components/Footer';
 import RightContent from '@/components/RightContent';
+import { getLoginUserUsingGET } from '@/services/api-backend/userController';
 import { LinkOutlined } from '@ant-design/icons';
 import { SettingDrawer } from '@ant-design/pro-components';
 import type { RunTimeLayoutConfig } from '@umijs/max';
 import { history, Link } from '@umijs/max';
 import { requestConfig } from './requestConfig';
-import {getLoginUserUsingGET} from "@/services/api-backend/userController";
 
 const isDev = process.env.NODE_ENV === 'development';
 const loginPath = '/user/login';
@@ -17,7 +17,7 @@ export async function getInitialState(): Promise<InitialState> {
   // 当页面首次加载时，获取要全局保存的数据，比如用户登录信息
   const state: InitialState = {
     loginUser: undefined,
-  }
+  };
   try {
     const res = await getLoginUserUsingGET();
     if (res.data) {
@@ -32,7 +32,7 @@ export async function getInitialState(): Promise<InitialState> {
 // ProLayout 支持的api https://procomponents.ant.design/components/layout
 export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) => {
   return {
-    layout: "top",
+    layout: 'top',
     rightContentRender: () => <RightContent />,
     waterMarkProps: {
       content: initialState?.loginUser?.userName,
@@ -99,6 +99,7 @@ export const layout: RunTimeLayoutConfig = ({ initialState, setInitialState }) =
       );
     },
     ...initialState?.settings,
+    logo: '/suapi_nav_logo_v2.svg',
   };
 };
 

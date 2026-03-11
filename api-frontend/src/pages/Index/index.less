@@ -1,0 +1,330 @@
+.page {
+  --primary: #4468ff;
+  --secondary: #6d59d9;
+  --panel-border: rgba(93, 117, 255, 0.2);
+  min-height: 100vh;
+  font-family: 'Avenir Next', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  background: radial-gradient(780px 280px at 12% -8%, rgba(68, 104, 255, 0.18), transparent 72%),
+    radial-gradient(760px 290px at 93% -14%, rgba(109, 89, 217, 0.15), transparent 70%), #f3f5ff;
+}
+
+.container {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 10px 10px 58px;
+}
+
+.heroPanel {
+  position: relative;
+  margin-bottom: 14px;
+  padding: 20px 20px 18px;
+  overflow: hidden;
+  color: #fff;
+  background: linear-gradient(132deg, #2f5fff 0%, #4f6dff 44%, #6d59d9 100%);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 20px;
+  box-shadow: 0 12px 36px rgba(17, 34, 83, 0.22);
+}
+
+.heroPanel::before {
+  position: absolute;
+  top: -76px;
+  right: -78px;
+  width: 188px;
+  height: 188px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 50%;
+  content: '';
+}
+
+.heroPanel::after {
+  position: absolute;
+  bottom: -52px;
+  left: -44px;
+  width: 142px;
+  height: 142px;
+  background: rgba(255, 255, 255, 0.09);
+  border-radius: 50%;
+  content: '';
+}
+
+.heroRow {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.heroMain {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.heroIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(4, 20, 58, 0.24);
+}
+
+.heroTitle {
+  margin: 0;
+  font-weight: 800;
+  font-size: 24px;
+  letter-spacing: 0.4px;
+}
+
+.heroSubtitle {
+  margin: 4px 0 0;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 13px;
+}
+
+.metricRow {
+  display: flex;
+  gap: 8px;
+}
+
+.metricPill {
+  min-width: 90px;
+  padding: 7px 10px;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 12px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.11);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 999px;
+}
+
+.contentCard {
+  padding: 14px 14px 8px;
+  background: rgba(255, 255, 255, 0.93);
+  border: 1px solid var(--panel-border);
+  border-radius: 18px;
+  box-shadow: 0 10px 32px rgba(20, 41, 97, 0.1);
+  backdrop-filter: blur(8px);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.sectionTitle {
+  margin: 0 !important;
+  color: #1f2d4d !important;
+  font-weight: 700 !important;
+}
+
+.totalTag {
+  margin: 0;
+  padding: 2px 10px;
+  color: #355ad7;
+  font-weight: 600;
+  background: rgba(68, 104, 255, 0.1);
+  border: 1px solid rgba(68, 104, 255, 0.24);
+  border-radius: 999px;
+}
+
+.apiCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  height: 228px;
+  padding: 16px 16px 14px;
+  background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+  border: 1px solid rgba(88, 112, 255, 0.18);
+  border-radius: 16px;
+  box-shadow: 0 5px 16px rgba(33, 58, 120, 0.08);
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+  animation: cardIn 0.4s ease both;
+}
+
+.apiCard:hover {
+  border-color: rgba(68, 104, 255, 0.36);
+  box-shadow: 0 10px 28px rgba(45, 71, 140, 0.18);
+  transform: translateY(-3px);
+}
+
+.cardHeader {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding-right: 86px;
+}
+
+.iconBox {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+}
+
+.cardTitle {
+  display: block;
+  color: #1c2540 !important;
+  font-size: 15px !important;
+}
+
+.statusTag {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  margin: 0;
+  padding: 0 10px;
+  line-height: 22px;
+  font-size: 11px;
+  border: none;
+  border-radius: 999px;
+}
+
+.running {
+  color: #0e824d;
+  background: rgba(17, 181, 106, 0.14) !important;
+}
+
+.closed {
+  color: #788199;
+  background: rgba(122, 132, 153, 0.12) !important;
+}
+
+.cardDesc {
+  flex: 1;
+  margin: 0 !important;
+  color: #6d7790 !important;
+  font-size: 12px !important;
+}
+
+.cardListItem {
+  display: flex;
+}
+
+.cardListItem > * {
+  width: 100%;
+}
+
+.cardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.methodTag {
+  margin: 0;
+  padding: 2px 9px;
+  font-weight: 600;
+  font-size: 12px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+}
+
+.methodGet {
+  color: #1f5fff;
+  background: rgba(31, 95, 255, 0.12);
+  border-color: rgba(31, 95, 255, 0.28);
+}
+
+.methodPost {
+  color: #137c48;
+  background: rgba(19, 124, 72, 0.12);
+  border-color: rgba(19, 124, 72, 0.26);
+}
+
+.methodPut {
+  color: #be6b00;
+  background: rgba(190, 107, 0, 0.12);
+  border-color: rgba(190, 107, 0, 0.26);
+}
+
+.methodDelete {
+  color: #c0392b;
+  background: rgba(192, 57, 43, 0.12);
+  border-color: rgba(192, 57, 43, 0.26);
+}
+
+.methodPatch {
+  color: #7d3cb5;
+  background: rgba(125, 60, 181, 0.12);
+  border-color: rgba(125, 60, 181, 0.26);
+}
+
+.methodDefault {
+  color: #4a5b78;
+  background: rgba(74, 91, 120, 0.12);
+  border-color: rgba(74, 91, 120, 0.24);
+}
+
+.detailButton {
+  height: 26px !important;
+  padding: 0 11px !important;
+  font-weight: 600 !important;
+  font-size: 12px !important;
+  line-height: 24px !important;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%) !important;
+  border: none !important;
+  border-radius: 999px !important;
+  box-shadow: 0 8px 18px rgba(68, 104, 255, 0.26);
+}
+
+.paginationWrap {
+  margin-top: 24px;
+  text-align: right;
+}
+
+@keyframes cardIn {
+  from {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 992px) {
+  .container {
+    padding: 8px 8px 50px;
+  }
+
+  .heroRow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .metricRow {
+    flex-wrap: wrap;
+  }
+
+  .contentCard {
+    padding: 12px 10px 4px;
+    border-radius: 16px;
+  }
+}
+
+@media (max-width: 576px) {
+  .heroTitle {
+    font-size: 20px;
+  }
+
+  .heroIcon {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+  }
+}

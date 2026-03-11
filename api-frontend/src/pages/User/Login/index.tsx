@@ -1,40 +1,33 @@
 import {
+  getLoginUserUsingGET,
+  resetPasswordNoCodeUsingPOST,
+  userLoginUsingPOST,
+  userRegisterUsingPOST,
+} from '@/services/api-backend/userController';
+import {
   ApiOutlined,
   LockOutlined,
   SafetyCertificateOutlined,
   UserOutlined,
 } from '@ant-design/icons';
 import { history, useModel } from '@umijs/max';
-import {
-  Alert,
-  Button,
-  Checkbox,
-  Divider,
-  Form,
-  Input,
-  message,
-  Modal,
-} from 'antd';
+import { Alert, Button, Checkbox, Divider, Form, Input, message, Modal } from 'antd';
 import React, { useState } from 'react';
-import {
-  getLoginUserUsingGET,
-  resetPasswordNoCodeUsingPOST,
-  userLoginUsingPOST,
-  userRegisterUsingPOST,
-} from '@/services/api-backend/userController';
+import styles from './index.less';
 
-/* ─── 校验规则 ─── */
+const accountPattern = /^[A-Za-z0-9!@#$%^&*()_+\-=\[\]{};:,.?/|]{6,16}$/;
 const accountRules = [
   { required: true, message: '请输入账号' },
-  { min: 2, max: 16, message: '账号长度 2-16 位' },
-];
-const pwdPattern = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,16}$/;
-const passwordRules = [
-  { required: true, message: '请输入密码' },
-  { pattern: pwdPattern, message: '密码为字母+数字组合，6-16 位' },
+  { pattern: accountPattern, message: '账号需 6-16 位，可包含字母、数字、特殊字符' },
 ];
 
-/* ─── 注册弹窗 ─── */
+const pwdPattern = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,16}$/;
+
+const passwordRules = [
+  { required: true, message: '请输入密码' },
+  { pattern: pwdPattern, message: '密码需 8-16 位，且包含字母和数字' },
+];
+
 const RegisterModal: React.FC<{ open: boolean; onClose: () => void }> = ({ open, onClose }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
@@ -64,51 +57,55 @@ const RegisterModal: React.FC<{ open: boolean; onClose: () => void }> = ({ open,
   return (
     <Modal
       title={
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <UserOutlined style={{ color: '#667eea' }} />
+        <div className={styles.modalTitle}>
+          <UserOutlined style={{ color: '#4468ff' }} />
           <span>创建新账号</span>
         </div>
       }
       open={open}
       footer={null}
-      onCancel={() => { form.resetFields(); onClose(); }}
+      onCancel={() => {
+        form.resetFields();
+        onClose();
+      }}
       width={420}
       centered
+      wrapClassName={styles.modalOverlay}
     >
       <Form form={form} layout="vertical" onFinish={onFinish} style={{ marginTop: 8 }}>
         <Form.Item name="userAccount" label="账号" rules={accountRules}>
           <Input
-            prefix={<UserOutlined style={{ color: '#c0c4d6' }} />}
-            placeholder="请输入账号（2-16位）"
+            prefix={<UserOutlined style={{ color: '#a9b0c6' }} />}
+            placeholder="6-16位，字母/数字/特殊字符"
             size="large"
-            style={{ borderRadius: 8 }}
           />
         </Form.Item>
         <Form.Item name="userPassword" label="密码" rules={passwordRules}>
           <Input.Password
-            prefix={<LockOutlined style={{ color: '#c0c4d6' }} />}
-            placeholder="字母+数字组合，6-16位"
+            prefix={<LockOutlined style={{ color: '#a9b0c6' }} />}
+            placeholder="8-16位，需包含字母和数字"
             size="large"
-            style={{ borderRadius: 8 }}
           />
         </Form.Item>
         <Form.Item
           name="checkPassword"
           label="确认密码"
-          rules={[{ required: true, message: '请再次输入密码' }]}
+          rules={[
+            { required: true, message: '请再次输入密码' },
+            { pattern: pwdPattern, message: '密码需 8-16 位，且包含字母和数字' },
+          ]}
         >
           <Input.Password
-            prefix={<SafetyCertificateOutlined style={{ color: '#c0c4d6' }} />}
-            placeholder="请再次输入密码"
+            prefix={<SafetyCertificateOutlined style={{ color: '#a9b0c6' }} />}
+            placeholder="请再次输入 8-16 位密码"
             size="large"
-            style={{ borderRadius: 8 }}
           />
         </Form.Item>
         <Alert
           type="info"
           showIcon
-          message="密码须包含字母和数字，长度 6-16 位"
-          style={{ marginBottom: 16, borderRadius: 8, fontSize: 12 }}
+          message="账号：6-16位，可含字母/数字/特殊字符；密码：8-16位，需含字母和数字"
+          style={{ marginBottom: 16, fontSize: 12 }}
         />
         <Form.Item style={{ marginBottom: 0 }}>
           <Button
@@ -117,14 +114,7 @@ const RegisterModal: React.FC<{ open: boolean; onClose: () => void }> = ({ open,
             block
             size="large"
             loading={loading}
-            style={{
-              borderRadius: 8,
-              height: 44,
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              border: 'none',
-              fontWeight: 600,
-              fontSize: 15,
-            }}
+            className={styles.modalSubmitButton}
           >
             立即注册
           </Button>
@@ -134,7 +124,6 @@ const RegisterModal: React.FC<{ open: boolean; onClose: () => void }> = ({ open,
   );
 };
 
-/* ─── 忘记密码弹窗 ─── */
 const ForgotModal: React.FC<{ open: boolean; onClose: () => void }> = ({ open, onClose }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
@@ -169,8 +158,8 @@ const ForgotModal: React.FC<{ open: boolean; onClose: () => void }> = ({ open, o
   return (
     <Modal
       title={
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <SafetyCertificateOutlined style={{ color: '#667eea' }} />
+        <div className={styles.modalTitle}>
+          <SafetyCertificateOutlined style={{ color: '#4468ff' }} />
           <span>重置密码</span>
         </div>
       }
@@ -179,41 +168,42 @@ const ForgotModal: React.FC<{ open: boolean; onClose: () => void }> = ({ open, o
       onCancel={handleClose}
       width={420}
       centered
+      wrapClassName={styles.modalOverlay}
     >
       <Form form={form} layout="vertical" onFinish={onFinish} style={{ marginTop: 8 }}>
         <Form.Item name="userAccount" label="账号" rules={accountRules}>
           <Input
-            prefix={<UserOutlined style={{ color: '#c0c4d6' }} />}
-            placeholder="请输入注册时的账号"
+            prefix={<UserOutlined style={{ color: '#a9b0c6' }} />}
+            placeholder="账号：6-16位，字母/数字/特殊字符"
             size="large"
-            style={{ borderRadius: 8 }}
           />
         </Form.Item>
         <Form.Item name="newPassword" label="新密码" rules={passwordRules}>
           <Input.Password
-            prefix={<LockOutlined style={{ color: '#c0c4d6' }} />}
-            placeholder="字母+数字，6-16位"
+            prefix={<LockOutlined style={{ color: '#a9b0c6' }} />}
+            placeholder="8-16位，需包含字母和数字"
             size="large"
-            style={{ borderRadius: 8 }}
           />
         </Form.Item>
         <Form.Item
           name="checkPassword"
           label="确认新密码"
-          rules={[{ required: true, message: '请再次输入新密码' }]}
+          rules={[
+            { required: true, message: '请再次输入新密码' },
+            { pattern: pwdPattern, message: '密码需 8-16 位，且包含字母和数字' },
+          ]}
         >
           <Input.Password
-            prefix={<SafetyCertificateOutlined style={{ color: '#c0c4d6' }} />}
-            placeholder="请再次输入新密码"
+            prefix={<SafetyCertificateOutlined style={{ color: '#a9b0c6' }} />}
+            placeholder="请再次输入 8-16 位密码"
             size="large"
-            style={{ borderRadius: 8 }}
           />
         </Form.Item>
         <Alert
           type="info"
           showIcon
-          message="密码须包含字母和数字，长度 6-16 位"
-          style={{ marginBottom: 16, borderRadius: 8, fontSize: 12 }}
+          message="账号：6-16位，可含字母/数字/特殊字符；密码：8-16位，需含字母和数字"
+          style={{ marginBottom: 16, fontSize: 12 }}
         />
         <Form.Item style={{ marginBottom: 0 }}>
           <Button
@@ -222,14 +212,7 @@ const ForgotModal: React.FC<{ open: boolean; onClose: () => void }> = ({ open, o
             block
             size="large"
             loading={loading}
-            style={{
-              borderRadius: 8,
-              height: 44,
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              border: 'none',
-              fontWeight: 600,
-              fontSize: 15,
-            }}
+            className={styles.modalSubmitButton}
           >
             重置密码
           </Button>
@@ -239,7 +222,6 @@ const ForgotModal: React.FC<{ open: boolean; onClose: () => void }> = ({ open, o
   );
 };
 
-/* ─── 主登录页 ─── */
 const Login: React.FC = () => {
   const [form] = Form.useForm();
   const [loginLoading, setLoginLoading] = useState(false);
@@ -250,12 +232,12 @@ const Login: React.FC = () => {
 
   const handleLogin = async (values: any) => {
     const { userAccount, userPassword } = values;
-    if (!userAccount || userAccount.length < 2 || userAccount.length > 16) {
-      setLoginError('账号长度应为 2-16 位');
+    if (!userAccount || !accountPattern.test(userAccount)) {
+      setLoginError('账号需 6-16 位，可包含字母、数字、特殊字符');
       return;
     }
     if (!userPassword || !pwdPattern.test(userPassword)) {
-      setLoginError('密码需为字母和数字组合，6-16 位');
+      setLoginError('密码需 8-16 位，且包含字母和数字');
       return;
     }
     setLoginError('');
@@ -263,7 +245,6 @@ const Login: React.FC = () => {
     try {
       const res = await userLoginUsingPOST({ userAccount, userPassword });
       if (res?.data) {
-        // 基于 session 再确认一次，避免仅登录接口成功但会话未建立导致后续“未登录”
         const loginUserRes = await getLoginUserUsingGET();
         if (!loginUserRes?.data) {
           setLoginError('登录态建立失败，请使用同一域名访问（建议 localhost）后重试');
@@ -284,164 +265,126 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '24px 16px',
-    }}>
-      {/* 背景装饰圆 */}
-      <div style={{
-        position: 'fixed', top: '-80px', right: '-80px',
-        width: 300, height: 300, borderRadius: '50%',
-        background: 'rgba(255,255,255,0.08)', pointerEvents: 'none',
-      }} />
-      <div style={{
-        position: 'fixed', bottom: '-100px', left: '-100px',
-        width: 400, height: 400, borderRadius: '50%',
-        background: 'rgba(255,255,255,0.06)', pointerEvents: 'none',
-      }} />
-
-      {/* 卡片 */}
-      <div style={{
-        width: '100%', maxWidth: 420,
-        background: '#fff',
-        borderRadius: 20,
-        padding: '40px 36px 32px',
-        boxShadow: '0 20px 60px rgba(102,126,234,0.35)',
-        position: 'relative',
-      }}>
-        {/* Logo 区域 */}
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{
-            width: 64, height: 64, borderRadius: 16,
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            marginBottom: 16,
-            boxShadow: '0 8px 24px rgba(102,126,234,0.4)',
-          }}>
-            <ApiOutlined style={{ fontSize: 32, color: '#fff' }} />
+    <div className={styles.pageWrapper}>
+      <div className={styles.loginShell}>
+        <section className={styles.brandPanel}>
+          <div className={styles.brandInner}>
+            <div className={styles.brandBadge}>
+              <ApiOutlined />
+              <span>SUAPI Platform</span>
+            </div>
+            <h1 className={styles.brandTitle}>更快连接 API</h1>
+            <p className={styles.brandSubtitle}>统一管理与调用，让接入更直接。</p>
+            <div className={styles.featureList}>
+              <div className={styles.featureItem}>
+                <span className={styles.featureIcon}>
+                  <ApiOutlined />
+                </span>
+                接口统一管理
+              </div>
+              <div className={styles.featureItem}>
+                <span className={styles.featureIcon}>
+                  <SafetyCertificateOutlined />
+                </span>
+                安全鉴权调用
+              </div>
+              <div className={styles.featureItem}>
+                <span className={styles.featureIcon}>
+                  <LockOutlined />
+                </span>
+                全链路可追踪
+              </div>
+            </div>
           </div>
-          <h1 style={{
-            fontSize: 24, fontWeight: 700, color: '#1a1a2e',
-            margin: 0, letterSpacing: 1,
-          }}>
-            SUAPI 开放平台
-          </h1>
-          <p style={{ color: '#8891a5', marginTop: 6, marginBottom: 0, fontSize: 14 }}>
-            海量 API，即开即用
-          </p>
-        </div>
+        </section>
 
-        {/* 错误提示 */}
-        {loginError && (
-          <Alert
-            message={loginError}
-            type="error"
-            showIcon
-            closable
-            onClose={() => setLoginError('')}
-            style={{ marginBottom: 16, borderRadius: 8 }}
-          />
-        )}
+        <section className={styles.formPanel}>
+          <div className={styles.logoArea}>
+            <div className={styles.logoIcon}>
+              <div className={styles.creativeLogo}>
+                <span className={styles.creativeLogoRing} />
+                <span className={styles.creativeLogoCore} />
+                <span className={`${styles.creativeLogoNode} ${styles.creativeLogoNodeTop}`} />
+                <span className={`${styles.creativeLogoNode} ${styles.creativeLogoNodeRight}`} />
+                <span className={`${styles.creativeLogoNode} ${styles.creativeLogoNodeBottom}`} />
+              </div>
+            </div>
+            <h2 className={styles.formTitle}>欢迎登录</h2>
+            <p className={styles.formSubtitle}>登录后即可调用接口并管理你的应用</p>
+          </div>
 
-        {/* 登录表单 */}
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleLogin}
-          initialValues={{ remember: true }}
-        >
-          <Form.Item name="userAccount" rules={accountRules} style={{ marginBottom: 14 }}>
-            <Input
-              prefix={<UserOutlined style={{ color: '#c0c4d6' }} />}
-              placeholder="请输入账号（2-16位）"
-              size="large"
-              style={{ borderRadius: 10, height: 46 }}
+          {loginError && (
+            <Alert
+              message={loginError}
+              type="error"
+              showIcon
+              closable
+              onClose={() => setLoginError('')}
+              className={styles.errorAlert}
             />
-          </Form.Item>
-          <Form.Item
-            name="userPassword"
-            rules={[{ required: true, message: '请输入密码' }]}
-            style={{ marginBottom: 12 }}
+          )}
+
+          <Form
+            form={form}
+            className={styles.mainForm}
+            layout="vertical"
+            onFinish={handleLogin}
+            initialValues={{ remember: true }}
           >
-            <Input.Password
-              prefix={<LockOutlined style={{ color: '#c0c4d6' }} />}
-              placeholder="请输入密码"
-              size="large"
-              style={{ borderRadius: 10, height: 46 }}
-            />
-          </Form.Item>
-
-          <div style={{
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            marginBottom: 20,
-          }}>
-            <Form.Item name="remember" valuePropName="checked" noStyle>
-              <Checkbox style={{ color: '#6b6f83', fontSize: 13 }}>记住我</Checkbox>
+            <Form.Item name="userAccount" rules={accountRules}>
+              <Input
+                prefix={<UserOutlined style={{ color: '#a9b0c6' }} />}
+                placeholder="账号：6-16位，字母/数字/特殊字符"
+                size="large"
+              />
             </Form.Item>
-            <a
-              onClick={() => setForgotVisible(true)}
-              style={{ fontSize: 13, color: '#667eea' }}
-            >
-              忘记密码？
-            </a>
-          </div>
+            <Form.Item name="userPassword" rules={passwordRules}>
+              <Input.Password
+                prefix={<LockOutlined style={{ color: '#a9b0c6' }} />}
+                placeholder="密码：8-16位，需包含字母和数字"
+                size="large"
+              />
+            </Form.Item>
 
-          <Form.Item style={{ marginBottom: 16 }}>
-            <Button
-              type="primary"
-              htmlType="submit"
-              size="large"
-              loading={loginLoading}
-              block
-              style={{
-                borderRadius: 10,
-                height: 48,
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                border: 'none',
-                fontWeight: 700,
-                fontSize: 16,
-                letterSpacing: 2,
-                boxShadow: '0 4px 15px rgba(102,126,234,0.4)',
-              }}
-            >
-              登 录
-            </Button>
-          </Form.Item>
-        </Form>
+            <div className={styles.rememberRow}>
+              <Form.Item name="remember" valuePropName="checked" noStyle>
+                <Checkbox className={styles.rememberCheck}>记住我</Checkbox>
+              </Form.Item>
+              <Button
+                type="link"
+                className={styles.inlineLinkButton}
+                onClick={() => setForgotVisible(true)}
+              >
+                忘记密码？
+              </Button>
+            </div>
 
-        <Divider style={{ color: '#bfc3d0', borderColor: '#eef0f6', fontSize: 13 }}>
-          还没有账号？
-        </Divider>
-
-        <Button
-          block
-          size="large"
-          onClick={() => setRegisterVisible(true)}
-          style={{
-            borderRadius: 10,
-            height: 46,
-            border: '1.5px solid #667eea',
-            color: '#667eea',
-            fontWeight: 600,
-            fontSize: 15,
-            background: 'transparent',
-            boxShadow: 'none',
-          }}
-        >
-          立即注册
-        </Button>
+            <Form.Item style={{ marginBottom: 0 }}>
+              <Button
+                type="primary"
+                htmlType="submit"
+                size="large"
+                loading={loginLoading}
+                block
+                className={styles.submitBtn}
+              >
+                登 录
+              </Button>
+            </Form.Item>
+          </Form>
+          <Divider className={styles.registerDivider}>还没有账号？</Divider>
+          <Button
+            block
+            size="large"
+            onClick={() => setRegisterVisible(true)}
+            className={styles.ghostBtn}
+          >
+            立即注册
+          </Button>
+        </section>
       </div>
 
-      {/* 页脚 */}
-      <div style={{
-        marginTop: 24, color: 'rgba(255,255,255,0.6)',
-        fontSize: 13, textAlign: 'center',
-      }}>
+      <div className={styles.pageFooter}>
         © {new Date().getFullYear()} SUAPI · All rights reserved
       </div>
 

@@ -29,4 +29,8 @@
         select interfaceInfoId, sum(totalNum) as totalNum from user_interface_info group by interfaceInfoId
         order by totalNum desc limit #{limit};
     </select>
+
+    <select id="getTotalInvokeNum" resultType="java.lang.Long">
+        select ifnull(sum(totalNum), 0) from user_interface_info where isDelete = 0;
+    </select>
 </mapper>

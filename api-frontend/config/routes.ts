@@ -1,6 +1,12 @@
 export default [
-  { path: '/', name: '主页', icon: 'smile', component: './Index' },
-  { path: '/interface_info/:id', name: '查看接口', icon: 'smile', component: './InterfaceInfo', hideInMenu: true },
+  { path: '/', name: '主页', icon: 'home', component: './Index' },
+  {
+    path: '/interface_info/:id',
+    name: '查看接口',
+    icon: 'fileText',
+    component: './InterfaceInfo',
+    hideInMenu: true,
+  },
   {
     path: '/user',
     layout: false,
@@ -9,11 +15,21 @@ export default [
   {
     path: '/admin',
     name: '管理页',
-    icon: 'crown',
+    icon: 'appstore',
     access: 'canAdmin',
     routes: [
-      { name: '接口管理', icon: 'table', path: '/admin/interface_info', component: './Admin/InterfaceInfo' },
-      { name: '接口分析', icon: 'analysis', path: '/admin/interface_analysis', component: './Admin/InterfaceAnalysis' },
+      {
+        name: '接口管理',
+        icon: 'api',
+        path: '/admin/interface_info',
+        component: './Admin/InterfaceInfo',
+      },
+      {
+        name: '接口分析',
+        icon: 'barChart',
+        path: '/admin/interface_analysis',
+        component: './Admin/InterfaceAnalysis',
+      },
     ],
   },
 

@@ -1,17 +1,129 @@
-import { ApiOutlined, LogoutOutlined, ThunderboltOutlined } from '@ant-design/icons';
-import { Link, history, useModel } from '@umijs/max';
-import { Button, List, message, Pagination, Tag, Typography } from 'antd';
-import React, { useEffect, useState } from 'react';
 import { listInterfaceInfoByPageUsingGET } from '@/services/api-backend/interfaceInfoController';
-import { userLogoutUsingPOST } from '@/services/api-backend/userController';
+import {
+  ApiOutlined,
+  AppstoreOutlined,
+  AuditOutlined,
+  BranchesOutlined,
+  BugOutlined,
+  BuildOutlined,
+  CloudOutlined,
+  ClusterOutlined,
+  CodeOutlined,
+  DatabaseOutlined,
+  ExperimentOutlined,
+  FireOutlined,
+  GlobalOutlined,
+  LinkOutlined,
+  LockOutlined,
+  RocketOutlined,
+  SafetyCertificateOutlined,
+  ThunderboltOutlined,
+  ToolOutlined,
+  WifiOutlined,
+} from '@ant-design/icons';
+import { Link } from '@umijs/max';
+import { Button, List, message, Pagination, Tag, Tooltip, Typography } from 'antd';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import styles from './index.less';
 
 const gradients = [
-  'linear-gradient(135deg,#667eea 0%,#764ba2 100%)',
-  'linear-gradient(135deg,#f093fb 0%,#f5576c 100%)',
-  'linear-gradient(135deg,#4facfe 0%,#00f2fe 100%)',
-  'linear-gradient(135deg,#43e97b 0%,#38f9d7 100%)',
-  'linear-gradient(135deg,#fa709a 0%,#fee140 100%)',
+  'linear-gradient(135deg,#4468ff 0%,#6d59d9 100%)',
+  'linear-gradient(135deg,#0093e9 0%,#50b1ff 100%)',
+  'linear-gradient(135deg,#27ae60 0%,#2ecc71 100%)',
+  'linear-gradient(135deg,#f2994a 0%,#f2c94c 100%)',
+  'linear-gradient(135deg,#ee5f95 0%,#ff8a66 100%)',
+  'linear-gradient(135deg,#3366ff 0%,#00b4db 100%)',
+  'linear-gradient(135deg,#00c9a7 0%,#43e97b 100%)',
+  'linear-gradient(135deg,#8e54e9 0%,#4776e6 100%)',
+  'linear-gradient(135deg,#ff6a88 0%,#ff99ac 100%)',
+  'linear-gradient(135deg,#f7971e 0%,#ffd200 100%)',
+  'linear-gradient(135deg,#3a7bd5 0%,#00d2ff 100%)',
+  'linear-gradient(135deg,#11998e 0%,#38ef7d 100%)',
+  'linear-gradient(135deg,#6a11cb 0%,#2575fc 100%)',
+  'linear-gradient(135deg,#fc5c7d 0%,#6a82fb 100%)',
+  'linear-gradient(135deg,#00b09b 0%,#96c93d 100%)',
+  'linear-gradient(135deg,#ff4b2b 0%,#ff416c 100%)',
+  'linear-gradient(135deg,#1d976c 0%,#93f9b9 100%)',
+  'linear-gradient(135deg,#355c7d 0%,#6c5b7b 100%)',
+  'linear-gradient(135deg,#614385 0%,#516395 100%)',
+  'linear-gradient(135deg,#159957 0%,#155799 100%)',
 ];
+
+const cardIconList = [
+  ThunderboltOutlined,
+  CloudOutlined,
+  DatabaseOutlined,
+  GlobalOutlined,
+  LinkOutlined,
+  CodeOutlined,
+  RocketOutlined,
+  SafetyCertificateOutlined,
+  BranchesOutlined,
+  ClusterOutlined,
+  AppstoreOutlined,
+  BuildOutlined,
+  ToolOutlined,
+  WifiOutlined,
+  LockOutlined,
+  BugOutlined,
+  AuditOutlined,
+  FireOutlined,
+  ExperimentOutlined,
+  ApiOutlined,
+];
+
+const hashText = (text: string) => {
+  let hash = 0;
+  for (let i = 0; i < text.length; i += 1) {
+    hash = (hash * 131 + text.charCodeAt(i)) >>> 0;
+  }
+  return hash;
+};
+
+const buildCardVisuals = (items: API.InterfaceInfo[], page: number, size: number) => {
+  const usedIconIndexes = new Set<number>();
+  const usedGradientIndexes = new Set<number>();
+  return items.map((item, index) => {
+    const seedText = `${item.id ?? ''}|${item.name ?? ''}|${
+      item.url ?? ''
+    }|${page}|${size}|${index}`;
+    const seed = hashText(seedText);
+
+    let iconIndex = seed % cardIconList.length;
+    while (usedIconIndexes.has(iconIndex) && usedIconIndexes.size < cardIconList.length) {
+      iconIndex = (iconIndex + 1) % cardIconList.length;
+    }
+    usedIconIndexes.add(iconIndex);
+
+    let gradientIndex = (seed * 7 + index) % gradients.length;
+    while (usedGradientIndexes.has(gradientIndex) && usedGradientIndexes.size < gradients.length) {
+      gradientIndex = (gradientIndex + 1) % gradients.length;
+    }
+    usedGradientIndexes.add(gradientIndex);
+
+    return { iconIndex, gradientIndex };
+  });
+};
+
+const getMethodClassName = (method?: string) => {
+  const upperMethod = (method || 'GET').toUpperCase();
+  if (upperMethod === 'GET') {
+    return styles.methodGet;
+  }
+  if (upperMethod === 'POST') {
+    return styles.methodPost;
+  }
+  if (upperMethod === 'PUT') {
+    return styles.methodPut;
+  }
+  if (upperMethod === 'DELETE') {
+    return styles.methodDelete;
+  }
+  if (upperMethod === 'PATCH') {
+    return styles.methodPatch;
+  }
+  return styles.methodDefault;
+};
 
 const Index: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -19,10 +131,8 @@ const Index: React.FC = () => {
   const [total, setTotal] = useState<number>(0);
   const [current, setCurrent] = useState(1);
   const [pageSize, setPageSize] = useState(8);
-  const { initialState, setInitialState } = useModel('@@initialState');
-  const loginUser = initialState?.loginUser;
 
-  const loadData = async (page = 1, size = pageSize) => {
+  const loadData = useCallback(async (page = 1, size = 8) => {
     setLoading(true);
     try {
       const res = await listInterfaceInfoByPageUsingGET({ current: page, pageSize: size });
@@ -32,205 +142,131 @@ const Index: React.FC = () => {
       message.error('加载失败：' + (e.message || '请稍后重试'));
     }
     setLoading(false);
-  };
+  }, []);
 
-  useEffect(() => { loadData(1, 8); }, []);
+  useEffect(() => {
+    loadData(1, 8);
+  }, [loadData]);
 
-  const handleLogout = async () => {
-    try {
-      await userLogoutUsingPOST();
-    } catch (_) {
-      // 忽略注销接口错误，session 可能已过期，仍然清除本地状态
-    }
-    await setInitialState((s: any) => ({ ...s, loginUser: undefined }));
-    message.success('已退出登录');
-    history.push('/user/login');
-  };
+  const cardVisuals = useMemo(
+    () => buildCardVisuals(list, current, pageSize),
+    [list, current, pageSize],
+  );
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'radial-gradient(1200px 500px at 50% -200px, rgba(102,126,234,0.25), transparent 55%), #f2f4fb',
-    }}>
-      {/* 顶部 Hero 区 */}
-      <div style={{
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        padding: '48px 24px 60px',
-        textAlign: 'center',
-        position: 'relative',
-        overflow: 'hidden',
-      }}>
-        {/* 装饰圆 */}
-        <div style={{
-          position: 'absolute', top: -60, right: -60, width: 220, height: 220,
-          borderRadius: '50%', background: 'rgba(255,255,255,0.08)',
-        }} />
-        <div style={{
-          position: 'absolute', bottom: -40, left: -40, width: 160, height: 160,
-          borderRadius: '50%', background: 'rgba(255,255,255,0.06)',
-        }} />
-
-        {/* 用户信息 + 注销 */}
-        <div style={{
-          position: 'absolute', top: 16, right: 24,
-          display: 'flex', alignItems: 'center', gap: 12,
-        }}>
-          {loginUser && (
-            <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 14 }}>
-              👋 {loginUser.userName || loginUser.userAccount}
-            </span>
-          )}
-          <Button
-            icon={<LogoutOutlined />}
-            onClick={handleLogout}
-            size="small"
-            style={{
-              background: 'rgba(255,255,255,0.15)',
-              border: '1px solid rgba(255,255,255,0.3)',
-              color: '#fff',
-              borderRadius: 20,
-              backdropFilter: 'blur(4px)',
-            }}
-          >
-            退出登录
-          </Button>
+    <div className={styles.page}>
+      <div className={styles.container}>
+        <div className={styles.heroPanel}>
+          <div className={styles.heroRow}>
+            <div className={styles.heroMain}>
+              <div className={styles.heroIcon}>
+                <ApiOutlined style={{ fontSize: 24, color: '#fff' }} />
+              </div>
+              <div>
+                <h1 className={styles.heroTitle}>接口广场</h1>
+                <p className={styles.heroSubtitle}>统一发现与调用 API，快速接入你的业务流程</p>
+              </div>
+            </div>
+            <div className={styles.metricRow}>
+              <div className={styles.metricPill}>总接口 {total} 个</div>
+              <div className={styles.metricPill}>当前页 {current}</div>
+              <div className={styles.metricPill}>每页 {pageSize} 条</div>
+            </div>
+          </div>
         </div>
 
-        {/* 标题 */}
-        <div style={{
-          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-          width: 72, height: 72, borderRadius: 20, marginBottom: 20,
-          background: 'rgba(255,255,255,0.15)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
-          backdropFilter: 'blur(8px)',
-        }}>
-          <ApiOutlined style={{ fontSize: 36, color: '#fff' }} />
-        </div>
-        <h1 style={{ color: '#fff', fontSize: 32, fontWeight: 800, margin: 0, letterSpacing: 1 }}>
-          SUAPI 开放平台
-        </h1>
-        <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 16, marginTop: 10, marginBottom: 0 }}>
-          探索并使用海量优质 API，快速接入，即开即用
-        </p>
-      </div>
+        <div className={styles.contentCard}>
+          <div className={styles.sectionHeader}>
+            <Typography.Title level={5} className={styles.sectionTitle}>
+              全部接口
+            </Typography.Title>
+            <Tag className={styles.totalTag}>共 {total} 个</Tag>
+          </div>
 
-      {/* 内容区 */}
-      <div style={{ maxWidth: 1320, margin: '0 auto', padding: '28px 8px 60px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-          <Typography.Title level={5} style={{ margin: 0, color: '#3d3d5c' }}>
-            全部接口 <Tag color="purple">{total}</Tag>
-          </Typography.Title>
-        </div>
-
-        <List
-          loading={loading}
-          dataSource={list}
-          grid={{ gutter: 14, xs: 1, sm: 2, md: 2, lg: 3, xl: 4, xxl: 4 }}
-          renderItem={(item, index) => (
-            <List.Item>
-              <div style={{
-                background: '#fff',
-                borderRadius: 16,
-                padding: '20px 22px',
-                border: '1px solid rgba(102,126,234,0.12)',
-                boxShadow: '0 2px 16px rgba(102,126,234,0.08)',
-                transition: 'transform 0.2s, box-shadow 0.2s, border-color 0.2s',
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 12,
-                backdropFilter: 'blur(2px)',
-              }}
-                onMouseEnter={e => {
-                  (e.currentTarget as HTMLElement).style.transform = 'translateY(-3px)';
-                  (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 28px rgba(102,126,234,0.18)';
-                  (e.currentTarget as HTMLElement).style.borderColor = 'rgba(102,126,234,0.35)';
-                }}
-                onMouseLeave={e => {
-                  (e.currentTarget as HTMLElement).style.transform = 'none';
-                  (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 16px rgba(102,126,234,0.08)';
-                  (e.currentTarget as HTMLElement).style.borderColor = 'rgba(102,126,234,0.12)';
-                }}
-              >
-                {/* 头部 */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{
-                    width: 44, height: 44, borderRadius: 12, flexShrink: 0,
-                    background: gradients[index % gradients.length],
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    <ThunderboltOutlined style={{ color: '#fff', fontSize: 20 }} />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <Typography.Text strong ellipsis style={{ fontSize: 15, color: '#1a1a2e', display: 'block' }}>
-                      {item.name}
-                    </Typography.Text>
+          <List
+            loading={loading}
+            dataSource={list}
+            grid={{ gutter: 14, xs: 1, sm: 2, md: 2, lg: 3, xl: 4, xxl: 4 }}
+            renderItem={(item, index) => {
+              const methodText = (item.method || 'GET').toUpperCase();
+              const methodClassName = getMethodClassName(methodText);
+              const visual = cardVisuals[index] || {
+                iconIndex: index % cardIconList.length,
+                gradientIndex: index % gradients.length,
+              };
+              const IconComponent = cardIconList[visual.iconIndex];
+              return (
+                <List.Item className={styles.cardListItem}>
+                  <article
+                    className={styles.apiCard}
+                    style={{ animationDelay: `${index * 26}ms` }}
+                    title={item.name || '未命名接口'}
+                  >
                     <Tag
-                      style={{ marginTop: 4, borderRadius: 4, fontSize: 11, border: 'none' }}
-                      color={item.status ? 'green' : 'default'}
+                      className={`${styles.statusTag} ${
+                        item.status ? styles.running : styles.closed
+                      }`}
                     >
                       {item.status ? '● 运行中' : '○ 已关闭'}
                     </Tag>
-                  </div>
-                </div>
+                    <div className={styles.cardHeader}>
+                      <div
+                        className={styles.iconBox}
+                        style={{ background: gradients[visual.gradientIndex] }}
+                      >
+                        <IconComponent style={{ color: '#fff', fontSize: 20 }} />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <Tooltip title={item.name || '未命名接口'} placement="topLeft">
+                          <Typography.Text strong ellipsis className={styles.cardTitle}>
+                            {item.name || '未命名接口'}
+                          </Typography.Text>
+                        </Tooltip>
+                      </div>
+                    </div>
 
-                {/* 描述 */}
-                <Typography.Paragraph
-                  ellipsis={{ rows: 2 }}
-                  style={{ color: '#8891a5', fontSize: 13, margin: 0, flex: 1 }}
-                >
-                  {item.description || '暂无描述'}
-                </Typography.Paragraph>
+                    <Typography.Paragraph ellipsis={{ rows: 2 }} className={styles.cardDesc}>
+                      {item.description || '暂无描述'}
+                    </Typography.Paragraph>
 
-                {/* 方法 + 查看按钮 */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Tag color="blue" style={{ borderRadius: 4, fontFamily: 'monospace' }}>
-                    {item.method || 'GET'}
-                  </Tag>
-                  <Link to={`/interface_info/${item.id}`}>
-                    <Button
-                      type="primary"
-                      size="small"
-                      style={{
-                        borderRadius: 8,
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        border: 'none',
-                        fontWeight: 600,
-                        padding: '0 16px',
-                      }}
-                    >
-                      查看详情 →
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </List.Item>
+                    <div className={styles.cardFooter}>
+                      <Tag className={`${styles.methodTag} ${methodClassName}`}>{methodText}</Tag>
+                      <Link to={`/interface_info/${item.id}`}>
+                        <Button type="primary" size="small" className={styles.detailButton}>
+                          查看详情
+                        </Button>
+                      </Link>
+                    </div>
+                  </article>
+                </List.Item>
+              );
+            }}
+          />
+
+          {total > pageSize && (
+            <div className={styles.paginationWrap}>
+              <Pagination
+                current={current}
+                pageSize={pageSize}
+                total={total}
+                showSizeChanger
+                pageSizeOptions={[8, 12, 16]}
+                onChange={(page, size) => {
+                  const nextSize = size || pageSize;
+                  setCurrent(page);
+                  setPageSize(nextSize);
+                  loadData(page, nextSize);
+                }}
+                onShowSizeChange={(_, size) => {
+                  setCurrent(1);
+                  setPageSize(size);
+                  loadData(1, size);
+                }}
+                showTotal={(t) => `共 ${t} 个接口`}
+              />
+            </div>
           )}
-        />
-
-        {total > pageSize && (
-          <div style={{ textAlign: 'center', marginTop: 32 }}>
-            <Pagination
-              current={current}
-              pageSize={pageSize}
-              total={total}
-              showSizeChanger
-              pageSizeOptions={[8, 12, 16]}
-              onChange={(page, size) => {
-                const nextSize = size || pageSize;
-                setCurrent(page);
-                setPageSize(nextSize);
-                loadData(page, nextSize);
-              }}
-              onShowSizeChange={(_, size) => {
-                setCurrent(1);
-                setPageSize(size);
-                loadData(1, size);
-              }}
-              showTotal={(t) => `共 ${t} 个接口`}
-            />
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );

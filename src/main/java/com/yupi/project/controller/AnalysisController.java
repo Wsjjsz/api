@@ -13,16 +13,17 @@ import com.yupi.apicommon.model.entity.InterfaceInfo;
 import com.yupi.apicommon.model.entity.UserInterfaceInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -45,7 +46,10 @@ public class AnalysisController {
     @GetMapping("/top/interface/invoke")
     @AuthCheck(mustRole = "admin")
     public BaseResponse<List<InterfaceInfoVO>> listTopInvokeInterfaceInfo() {
-        List<UserInterfaceInfo> userInterfaceInfoList = userInterfaceInfoMapper.listTopInvokeInterfaceInfo(3);
+        List<UserInterfaceInfo> userInterfaceInfoList = userInterfaceInfoMapper.listTopInvokeInterfaceInfo(5);
+        if (CollectionUtils.isEmpty(userInterfaceInfoList)) {
+            return ResultUtils.success(Collections.emptyList());
+        }
         Map<Long, List<UserInterfaceInfo>> interfaceInfoIdObjMap = userInterfaceInfoList.stream()
                 .collect(Collectors.groupingBy(UserInterfaceInfo::getInterfaceInfoId));
         QueryWrapper<InterfaceInfo> queryWrapper = new QueryWrapper<>();
@@ -60,7 +64,20 @@ public class AnalysisController {
             int totalNum = interfaceInfoIdObjMap.get(interfaceInfo.getId()).get(0).getTotalNum();
             interfaceInfoVO.setTotalNum(totalNum);
             return interfaceInfoVO;
-        }).collect(Collectors.toList());
+        }).sorted(Comparator.comparingInt(InterfaceInfoVO::getTotalNum).reversed())
+                .collect(Collectors.toList());
         return ResultUtils.success(interfaceInfoVOList);
+    }
+
+    @GetMapping("/interface/invoke/overview")
+    @AuthCheck(mustRole = "admin")
+    public BaseResponse<Map<String, Long>> getInterfaceInvokeOverview() {
+        long totalInterfaceNum = interfaceInfoService.count();
+        Long totalInvokeNum = userInterfaceInfoMapper.getTotalInvokeNum();
+
+        Map<String, Long> overview = new HashMap<>();
+        overview.put("totalInterfaceNum", totalInterfaceNum);
+        overview.put("totalInvokeNum", totalInvokeNum == null ? 0L : totalInvokeNum);
+        return ResultUtils.success(overview);
     }
 }
