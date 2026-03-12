@@ -11,6 +11,7 @@ COPY api-common api-common
 COPY api-client-sdk api-client-sdk
 
 RUN chmod +x mvnw \
+  && unset MAVEN_CONFIG \
   && ./mvnw -q -f api-common/pom.xml -DskipTests clean install \
   && ./mvnw -q -f api-client-sdk/pom.xml -DskipTests clean install \
   && ./mvnw -q -DskipTests clean package
