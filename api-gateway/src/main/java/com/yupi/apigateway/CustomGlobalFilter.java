@@ -36,12 +36,16 @@ import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 /**
  * 全局过滤
@@ -76,7 +80,21 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
     @Value("${api.prefer-http-inner:true}")
     private boolean preferHttpInner;
 
-    private static final List<String> IP_WHITE_LIST = Arrays.asList("127.0.0.1", "::1", "0:0:0:0:0:0:0:1");
+    /**
+     * 允许来源 IP（逗号分隔）
+     * 示例：* 或 127.0.0.1,10.0.0.1
+     */
+    @Value("${api.ip-whitelist:*}")
+    private String ipWhiteListConfig;
+
+    /**
+     * 用于拼接接口完整 URL 的候选 host（逗号分隔）
+     * 说明：会按顺序逐个尝试匹配数据库中的 interface_info.url
+     */
+    @Value("${api.interface-hosts:http://localhost:8123,http://api-interface:8123}")
+    private String interfaceHostsConfig;
+
+    private static final List<String> DEFAULT_LOCAL_IP_WHITE_LIST = Arrays.asList("127.0.0.1", "::1", "0:0:0:0:0:0:0:1");
 
     /**
      * 这些路径属于平台管理接口，不走网关签名鉴权，直接转发到主后端
@@ -92,17 +110,15 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
             "/api/webjars/"
     );
 
-    private static final String INTERFACE_HOST = "http://localhost:8123";
-
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         // 1. 请求日志
         ServerHttpRequest request = exchange.getRequest();
         String requestPath = request.getPath().value();
-        String path = INTERFACE_HOST + requestPath;
+        List<String> interfaceUrlCandidates = buildInterfaceUrlCandidates(requestPath);
         String method = request.getMethod().toString();
         log.info("请求唯一标识：" + request.getId());
-        log.info("请求路径：" + path);
+        log.info("请求路径：" + requestPath);
         log.info("请求方法：" + method);
         log.info("请求参数：" + request.getQueryParams());
         log.info("请求来源地址：" + request.getRemoteAddress());
@@ -164,7 +180,7 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
             return deny(response, "SIGN_NOT_MATCH");
         }
         // 5. 请求的模拟接口是否存在，以及请求方法是否匹配
-        InterfaceInfo interfaceInfo = getInterfaceInfoWithFallback(path, method);
+        InterfaceInfo interfaceInfo = getInterfaceInfoWithFallback(interfaceUrlCandidates, method);
         if (interfaceInfo == null) {
             return deny(response, "INTERFACE_NOT_FOUND");
         }
@@ -241,6 +257,15 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
     }
 
     private String getClientIp(ServerHttpRequest request) {
+        HttpHeaders headers = request.getHeaders();
+        String xForwardedFor = headers.getFirst("X-Forwarded-For");
+        if (StringUtils.isNotBlank(xForwardedFor)) {
+            return xForwardedFor.split(",")[0].trim();
+        }
+        String xRealIp = headers.getFirst("X-Real-IP");
+        if (StringUtils.isNotBlank(xRealIp)) {
+            return xRealIp.trim();
+        }
         InetSocketAddress remoteAddress = request.getRemoteAddress();
         if (remoteAddress == null) {
             return "";
@@ -274,7 +299,20 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         }
     }
 
-    private InterfaceInfo getInterfaceInfoWithFallback(String url, String method) {
+    private InterfaceInfo getInterfaceInfoWithFallback(List<String> urlCandidates, String method) {
+        if (urlCandidates == null || urlCandidates.isEmpty()) {
+            return null;
+        }
+        for (String url : urlCandidates) {
+            InterfaceInfo info = getSingleInterfaceInfoWithFallback(url, method);
+            if (info != null) {
+                return info;
+            }
+        }
+        return null;
+    }
+
+    private InterfaceInfo getSingleInterfaceInfoWithFallback(String url, String method) {
         if (preferHttpInner) {
             return getInterfaceInfoByHttp(url, method);
         }
@@ -282,10 +320,7 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
             return innerInterfaceInfoService.getInterfaceInfo(url, method);
         } catch (Exception e) {
             log.warn("getInterfaceInfo via dubbo error: {}", e.getMessage());
-            if (!preferHttpInner) {
-                return getInterfaceInfoByHttp(url, method);
-            }
-            return null;
+            return getInterfaceInfoByHttp(url, method);
         }
     }
 
@@ -359,6 +394,52 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
             return null;
         }
         return StringUtils.removeEnd(innerHost.trim(), "/") + path;
+    }
+
+    private List<String> buildInterfaceUrlCandidates(String requestPath) {
+        String normalizedPath = requestPath;
+        if (StringUtils.isBlank(normalizedPath)) {
+            normalizedPath = "/";
+        } else if (!normalizedPath.startsWith("/")) {
+            normalizedPath = "/" + normalizedPath;
+        }
+        Set<String> hostSet = new LinkedHashSet<>(parseListConfig(interfaceHostsConfig));
+        hostSet.add("http://localhost:8123");
+        hostSet.add("http://api-interface:8123");
+
+        Set<String> candidates = new LinkedHashSet<>();
+        for (String host : hostSet) {
+            String normalizedHost = normalizeHost(host);
+            if (StringUtils.isBlank(normalizedHost)) {
+                continue;
+            }
+            candidates.add(normalizedHost + normalizedPath);
+        }
+        // 兼容数据库里只存 path 的场景
+        candidates.add(normalizedPath);
+        return new ArrayList<>(candidates);
+    }
+
+    private String normalizeHost(String host) {
+        if (StringUtils.isBlank(host)) {
+            return null;
+        }
+        String trimmed = StringUtils.removeEnd(host.trim(), "/");
+        if (StringUtils.startsWithIgnoreCase(trimmed, "http://")
+                || StringUtils.startsWithIgnoreCase(trimmed, "https://")) {
+            return trimmed;
+        }
+        return "http://" + trimmed;
+    }
+
+    private List<String> parseListConfig(String rawValue) {
+        if (StringUtils.isBlank(rawValue)) {
+            return new ArrayList<>();
+        }
+        return Arrays.stream(rawValue.split(","))
+                .map(String::trim)
+                .filter(StringUtils::isNotBlank)
+                .collect(Collectors.toList());
     }
 
     private <T> T parseSuccessData(String responseBody, Class<T> dataClass) {
@@ -440,10 +521,17 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
     }
 
     private boolean isAllowedSource(String ip) {
+        List<String> ipWhiteList = parseListConfig(ipWhiteListConfig);
+        if (ipWhiteList.isEmpty() || ipWhiteList.contains("*")) {
+            return true;
+        }
         if (ip == null || ip.isEmpty()) {
             return false;
         }
-        if (IP_WHITE_LIST.contains(ip)) {
+        if (ipWhiteList.contains(ip)) {
+            return true;
+        }
+        if (DEFAULT_LOCAL_IP_WHITE_LIST.contains(ip)) {
             return true;
         }
         try {

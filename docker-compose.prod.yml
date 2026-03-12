@@ -102,6 +102,8 @@ services:
       SPRING_PROFILES_ACTIVE: prod
       API_INNER_TOKEN: ${API_INNER_TOKEN}
       DUBBO_REGISTRY_ADDRESS: nacos://nacos:8848
+      API_IP_WHITELIST: "${API_IP_WHITELIST:-*}"
+      API_INTERFACE_HOSTS: "${API_INTERFACE_HOSTS:-http://localhost:8123,http://api-interface:8123}"
     depends_on:
       - api-backend
       - api-interface

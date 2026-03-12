@@ -21,6 +21,8 @@ api:
   inner-host: http://api-backend:7529
   inner-token: ${API_INNER_TOKEN:api-inner-token}
   prefer-http-inner: true
+  interface-hosts: ${API_INTERFACE_HOSTS:http://localhost:8123,http://api-interface:8123}
+  ip-whitelist: ${API_IP_WHITELIST:*}
 
 dubbo:
   registry:

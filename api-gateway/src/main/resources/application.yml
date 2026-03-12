@@ -52,6 +52,10 @@ api:
   inner-host: http://localhost:7529
   inner-token: api-inner-token
   prefer-http-inner: true
+  # 用于匹配数据库中的接口 URL，可配置多个候选 host（逗号分隔）
+  interface-hosts: ${API_INTERFACE_HOSTS:http://localhost:8123,http://api-interface:8123}
+  # 网关来源 IP 白名单：* 表示不限制；或按逗号填写具体 IP
+  ip-whitelist: ${API_IP_WHITELIST:*}
 
 dubbo:
   application:
