@@ -1,0 +1,27 @@
+# 生产环境配置（容器部署）
+server:
+  port: 8090
+
+spring:
+  cloud:
+    gateway:
+      default-filters:
+        - AddResponseHeader=source, yupi
+      routes:
+        - id: backend_route
+          uri: http://api-backend:7529
+          predicates:
+            - Path=/api/user/**,/api/interfaceInfo/**,/api/post/**,/api/userInterfaceInfo/**,/api/analysis/**,/api/v3/**,/api/doc.html,/api/webjars/**
+        - id: interface_route
+          uri: http://api-interface:8123
+          predicates:
+            - Path=/api/name/**,/api/zodiac/**,/api/poetry/**,/api/calendar/**,/api/idiom/**,/api/random/**,/api/history/**,/api/joke/**,/api/recipe/**
+
+api:
+  inner-host: http://api-backend:7529
+  inner-token: ${API_INNER_TOKEN:api-inner-token}
+  prefer-http-inner: true
+
+dubbo:
+  registry:
+    address: ${DUBBO_REGISTRY_ADDRESS:nacos://nacos:8848}

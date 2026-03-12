@@ -1,0 +1,25 @@
+FROM maven:3.9.9-eclipse-temurin-8 AS builder
+
+WORKDIR /build
+
+COPY .mvn .mvn
+COPY mvnw mvnw
+COPY pom.xml pom.xml
+COPY src src
+COPY api-common api-common
+COPY api-client-sdk api-client-sdk
+
+RUN chmod +x mvnw \
+  && ./mvnw -q -f api-common/pom.xml -DskipTests clean install \
+  && ./mvnw -q -f api-client-sdk/pom.xml -DskipTests clean install \
+  && ./mvnw -q -DskipTests clean package
+
+FROM eclipse-temurin:8-jre
+
+WORKDIR /app
+
+COPY --from=builder /build/target/*.jar /app/app.jar
+
+EXPOSE 7529
+
+ENTRYPOINT ["sh", "-c", "java ${JAVA_OPTS} -jar /app/app.jar"]

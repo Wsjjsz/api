@@ -1,0 +1,129 @@
+name: suapi
+
+services:
+  mysql:
+    image: mysql:8.0.29
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    command:
+      - --default-authentication-plugin=mysql_native_password
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./sql/create_table.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    networks:
+      - suapi-net
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${API_REDIS_PASSWORD}"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${API_REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    networks:
+      - suapi-net
+
+  nacos:
+    image: nacos/nacos-server:v2.2.3
+    restart: unless-stopped
+    environment:
+      MODE: standalone
+      PREFER_HOST_MODE: hostname
+      JVM_XMS: 256m
+      JVM_XMX: 256m
+      JVM_XMN: 128m
+    ports:
+      - "${NACOS_PORT:-8848}:8848"
+    volumes:
+      - nacos_data:/home/nacos/data
+      - nacos_logs:/home/nacos/logs
+    networks:
+      - suapi-net
+
+  api-backend:
+    image: ${IMAGE_API_BACKEND}
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+      SPRING_PROFILES_ACTIVE: prod
+      API_DB_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      API_DB_USERNAME: root
+      API_DB_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      API_REDIS_HOST: redis
+      API_REDIS_PORT: 6379
+      API_REDIS_DATABASE: 0
+      API_REDIS_PASSWORD: ${API_REDIS_PASSWORD}
+      API_INNER_TOKEN: ${API_INNER_TOKEN}
+      API_CLIENT_ACCESS_KEY: ${API_CLIENT_ACCESS_KEY}
+      API_CLIENT_SECRET_KEY: ${API_CLIENT_SECRET_KEY}
+      DUBBO_REGISTRY_ADDRESS: nacos://nacos:8848
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nacos:
+        condition: service_started
+    networks:
+      - suapi-net
+
+  api-interface:
+    image: ${IMAGE_API_INTERFACE}
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+      SPRING_PROFILES_ACTIVE: prod
+      API_CLIENT_ACCESS_KEY: ${API_CLIENT_ACCESS_KEY}
+      API_CLIENT_SECRET_KEY: ${API_CLIENT_SECRET_KEY}
+    depends_on:
+      - api-backend
+    networks:
+      - suapi-net
+
+  api-gateway:
+    image: ${IMAGE_API_GATEWAY}
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+      SPRING_PROFILES_ACTIVE: prod
+      API_INNER_TOKEN: ${API_INNER_TOKEN}
+      DUBBO_REGISTRY_ADDRESS: nacos://nacos:8848
+    depends_on:
+      - api-backend
+      - api-interface
+    networks:
+      - suapi-net
+
+  api-frontend:
+    image: ${IMAGE_API_FRONTEND}
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-80}:80"
+    depends_on:
+      - api-gateway
+    networks:
+      - suapi-net
+
+volumes:
+  mysql_data:
+  redis_data:
+  nacos_data:
+  nacos_logs:
+
+networks:
+  suapi-net:
+    driver: bridge

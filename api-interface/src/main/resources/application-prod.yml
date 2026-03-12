@@ -1,0 +1,10 @@
+# 生产环境配置（容器部署）
+server:
+  port: 8123
+  servlet:
+    context-path: /api
+
+api:
+  client:
+    access-key: ${API_CLIENT_ACCESS_KEY:yupi}
+    secret-key: ${API_CLIENT_SECRET_KEY:abcdefgh}

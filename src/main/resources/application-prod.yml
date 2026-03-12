@@ -1,9 +1,25 @@
-# 线上配置文件
-# @author <a href="https://github.com/liyupi">程序员鱼皮</a>
-# @from <a href="https://yupi.icu">编程导航知识星球</a>
+# 生产环境配置（容器部署）
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: ${API_DB_URL:jdbc:mysql://localhost:3306/api}
+    url: ${API_DB_URL:jdbc:mysql://mysql:3306/api?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true}
     username: ${API_DB_USERNAME:root}
-    password: ${API_DB_PASSWORD:Wei.1234}
+    password: ${API_DB_PASSWORD:change_me}
+  session:
+    timeout: 86400
+    store-type: redis
+  redis:
+    host: ${API_REDIS_HOST:redis}
+    port: ${API_REDIS_PORT:6379}
+    database: ${API_REDIS_DATABASE:0}
+    password: ${API_REDIS_PASSWORD:change_me}
+
+api:
+  inner-token: ${API_INNER_TOKEN:api-inner-token}
+  client:
+    access-key: ${API_CLIENT_ACCESS_KEY:yupi}
+    secret-key: ${API_CLIENT_SECRET_KEY:abcdefgh}
+
+dubbo:
+  registry:
+    address: ${DUBBO_REGISTRY_ADDRESS:nacos://nacos:8848}
