@@ -1,4 +1,5 @@
-FROM maven:3.9.9-eclipse-temurin-8 AS builder
+ARG BASE_REGISTRY=docker.io
+FROM ${BASE_REGISTRY}/library/maven:3.9.9-eclipse-temurin-8 AS builder
 
 WORKDIR /build
 
@@ -11,7 +12,7 @@ RUN chmod +x mvnw \
   && ./mvnw -q -f api-client-sdk/pom.xml -DskipTests clean install \
   && ./mvnw -q -f api-interface/pom.xml -DskipTests clean package
 
-FROM eclipse-temurin:8-jre
+FROM ${BASE_REGISTRY}/library/eclipse-temurin:8-jre
 
 WORKDIR /app
 

@@ -1,4 +1,5 @@
-FROM nginx
+ARG BASE_REGISTRY=docker.io
+FROM ${BASE_REGISTRY}/library/nginx:latest
 
 WORKDIR /usr/share/nginx/html
 USER root
