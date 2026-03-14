@@ -7,9 +7,15 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.yupi.project.common.ErrorCode;
 import com.yupi.project.exception.BusinessException;
 import com.yupi.project.mapper.UserMapper;
+import com.yupi.project.service.InterfaceInfoService;
+import com.yupi.project.service.UserInterfaceInfoService;
 import com.yupi.project.service.UserService;
+import com.yupi.apicommon.model.entity.InterfaceInfo;
 import com.yupi.apicommon.model.entity.User;
+import com.yupi.apicommon.model.entity.UserInterfaceInfo;
 import lombok.extern.slf4j.Slf4j;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
@@ -34,6 +40,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
     @Resource
     private UserMapper userMapper;
+
+    @Resource
+    private InterfaceInfoService interfaceInfoService;
+
+    @Resource
+    private UserInterfaceInfoService userInterfaceInfoService;
 
     /**
      * 盐值，混淆密码
@@ -80,9 +92,28 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             user.setUserPassword(encryptPassword);
             user.setAccessKey(accessKey);
             user.setSecretKey(secretKey);
+            user.setUserName(RandomUtil.randomString(10));
+            user.setUserAvatar("https://api.dicebear.com/7.x/avataaars/svg?seed=" + userAccount);
+            user.setGender(0);
             boolean saveResult = this.save(user);
             if (!saveResult) {
                 throw new BusinessException(ErrorCode.SYSTEM_ERROR, "注册失败，数据库错误");
+            }
+            // 5. 为新用户分配所有已开放接口的免费调用次数
+            QueryWrapper<InterfaceInfo> ifWrapper = new QueryWrapper<>();
+            ifWrapper.eq("status", 1).eq("isDelete", 0);
+            List<InterfaceInfo> interfaceList = interfaceInfoService.list(ifWrapper);
+            if (!interfaceList.isEmpty()) {
+                List<UserInterfaceInfo> records = interfaceList.stream().map(iface -> {
+                    UserInterfaceInfo record = new UserInterfaceInfo();
+                    record.setUserId(user.getId());
+                    record.setInterfaceInfoId(iface.getId());
+                    record.setLeftNum(100);
+                    record.setTotalNum(0);
+                    record.setStatus(0);
+                    return record;
+                }).collect(Collectors.toList());
+                userInterfaceInfoService.saveBatch(records);
             }
             return user.getId();
         }
